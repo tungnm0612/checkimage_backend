@@ -7,29 +7,31 @@ const bcrypt = require('bcrypt');
 
 //CRUD
 //Create
-UserRouter.post('/', (req , res) =>{
-    const { username, email, password} = req.body;
+UserRouter.post('/adduser', (req , res) =>{
+    const { username, email, password, fullname} = req.body;
     
     const hashPassword = bcrypt.hashSync(password, 12);
 
-    userModel.create({username, email, password: hashPassword})
+    userModel.create({username, email, password: hashPassword, fullname})
         .then(userCreated =>{
             // console.log(userCreated);
             res.status(201).json({
                 success: true,
+                message: "Tạo tài khoản thành công!",
                 data: userCreated,
             })
         }).catch(error =>{
             console.log(error);
             res.status(500).json({
                 success: false,
+                message: "Tạo tài khoản không thành công!",
                 error,
             })
     })
 });
 
 //get list
-UserRouter.get('/', (req, res) => {
+UserRouter.get('/getalluser', (req, res) => {
     userModel.find({})
         .then(userList =>{
             res.json({
@@ -46,7 +48,7 @@ UserRouter.get('/', (req, res) => {
 });
 
 //get one
-UserRouter.get('/:id', (req, res) =>{
+UserRouter.get('/getoneuser/:id', (req, res) =>{
     userModel.findById(req.params.id)
         .then(oneUser =>{
             res.json({
@@ -61,7 +63,7 @@ UserRouter.get('/:id', (req, res) =>{
         });
 });
 //update
-
+UserRouter.put('/updatepassword')
 //delete
 
 

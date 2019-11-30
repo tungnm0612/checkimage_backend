@@ -76,6 +76,7 @@ AuthRouter.post('/login', (req, res) =>{
 
 AuthRouter.get('/check', (req, res) =>{
     const access_token = req.query.access_token;
+    // const access_token = req.headers.authorization.split(' ')[1];
 
     const decode = jwt.verify(access_token, jwtSecret);
     console.log(decode);
