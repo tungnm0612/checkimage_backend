@@ -21,7 +21,6 @@ AuthRouter.post('/login', (req, res) =>{
             message: 'thiếu username hoặc password'
         })
     }
-
     userModel.findOne({ username })
     .then(userFound =>{
         if (!userFound || !userFound._id){
@@ -77,28 +76,26 @@ AuthRouter.post('/login', (req, res) =>{
 AuthRouter.get('/check', (req, res) =>{
     const access_token = req.query.access_token;
     // const access_token = req.headers.authorization.split(' ')[1];
-
     const decode = jwt.verify(access_token, jwtSecret);
     console.log(decode);
-    
     try{
         if(decode && decode.id){
             res.send({
                 success: 1,
-                message: 'Nguoi dung da dang nhap',
+                message: 'Người dùng đã đăng nhập',
                 user: decode
             });
         } else{
             res.send({
                 success: 0,
-                message: 'Nguoi dung chua dang nhap'
+                message: 'Người dùng chưa đăng nhập'
             });
         };
     } catch(error){
         console.log(error);
         res.send({
             success: 0,
-            message: 'Token khong dung'
+            message: 'Token không đúng'
         });
     }
     

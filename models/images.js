@@ -11,6 +11,11 @@ const ImageSchema = new Schema(
             type: String,
             required: true,
             unique: true
+        },
+        transactionHash: {
+            type: String,
+            required: true,
+            unique: true
         }
     },
     {
