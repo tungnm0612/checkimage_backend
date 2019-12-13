@@ -5,6 +5,7 @@ const imageModel = require('../models/images');
 const multer = require('multer');
 const md5File = require('md5-file');
 const userModel = require('../models/users');
+const {imageContract, web3} = require('../web3');
 
 //CRUD
 
@@ -12,7 +13,7 @@ const userModel = require('../models/users');
 //upload image
 const imageUploader = multer({ dest: 'ImageUpload/' })
 
-ImageRouter.post('/hashuploadimage', imageUploader.single('uploadimage'), (req, res) => {
+ImageRouter.post('/uploadimage', imageUploader.single('uploadimage'), (req, res) => {
     const processedFile = req.file || {}; // MULTER xử lý và gắn đối tượng FILE vào req
     let orgName = processedFile.originalname || ''; // Tên gốc trong máy tính của người upload
     orgName = orgName.trim().replace(/ /g, "-")
@@ -20,49 +21,50 @@ ImageRouter.post('/hashuploadimage', imageUploader.single('uploadimage'), (req, 
     // Đổi tên của file vừa upload lên, vì multer đang đặt default ko có đuôi file
     const newFullPath = `${fullPathInServ}-${orgName}`;
     fs.renameSync(fullPathInServ, newFullPath);
-
-    // const idUser = req.body.uploadimage;
+    const idUser = req.body.uploadimage;
     // console.log(req.body);
-
-    md5File(newFullPath, (err, hash) => {
+    md5File(newFullPath, (err, hashImage) => {
         if (err) throw err
-        console.log("mã hash upload là: " + hash)
-        res.send({
-            status: true,
-            message: "hash xong!",
-            data: hash
+        console.log("mã hash upload là: " + hashImage)
+        imageModel.find({hashImage: hashImage}, async (err, dataImage) =>{
+            if (dataImage.length === 0){
+                const accounts = await web3.eth.getAccounts();
+                await imageContract.methods.addImage(idUser, hashImage).send({from:accounts[0], gas: 150000}) 
+                    .on('transactionHash', function(transactionHash){
+                        console.log(transactionHash);
+                        imageModel.create({idUser, hashImage, transactionHash})
+                            .then(imageCreated =>{
+                                res.status(201).json({
+                                    success: true,
+                                    message: "Đã tải ảnh lên thành công!",
+                                    data: imageCreated,
+                                })
+                            }).catch(err =>{
+                                console.log(err);
+                                res.status(500).json({
+                                    success:false,
+                                    message: "Tải ảnh lên không thành công",
+                                    err,
+                                })
+                            })
+                        })
+            } else {
+                // Xóa file ảnh sau khi mã hóa md5
+                fs.unlinkSync(newFullPath);
+                console.log("đã xóa ảnh trong folder ImageUpload")
+                res.send({
+                    status: false,
+                    message: "Ảnh của bạn đã có trên Blockchain"
+                })
+            }
         })
-        // imageModel.create({ idUser,hashImage: hash})
-        // .then(imageCreated =>{
-        //         res.status(201).json({
-        //             success: true,
-        //             message: "Upload ảnh thành công!",
-        //             data: imageCreated,
-        //         })
-        //         console.log("đã lưu mã hash vào DB")
-        // }).catch(err =>{
-        //     console.log(err);
-        //     res.status(500).json({
-        //         success:false,
-        //         message: "Upload ảnh không thành công!",
-        //         err,
-        //     })
-        // })
-        // Xóa file ảnh sau khi mã hóa md5
-        // fs.unlinkSync(newFullPath);
-        // console.log("đã xóa ảnh trong folder ImageUpload")
       })
-    // res.send({
-    //     status: true,
-    //     message: 'file uploaded',
-    //     fileNameInServer: newFullPath
-    // })
 })
 
 // Check Image
 const imageChecker = multer({ dest: 'ImageCheck/' })
 
-ImageRouter.post('/hashcheckimage', imageChecker.single('checkimage'), (req, res) => {
+ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) => {
     const processedFile = req.file || {}; // MULTER xử lý và gắn đối tượng FILE vào req
     let orgName = processedFile.originalname || ''; // Tên gốc trong máy tính của người upload
     orgName = orgName.trim().replace(/ /g, "-")
@@ -71,53 +73,65 @@ ImageRouter.post('/hashcheckimage', imageChecker.single('checkimage'), (req, res
     const newFullPath = `${fullPathInServ}-${orgName}`;
     fs.renameSync(fullPathInServ, newFullPath);
 
-    md5File(newFullPath, (err, hash) => {
+    md5File(newFullPath, (err, hashImage) => {
         if (err) throw err
-        console.log("mã hash check: " + hash)
-        res.send({
-            status: true,
-            message: "hash xong!",
-            data: hash
-        })
-
-        // imageModel.find({hashImage: hash}, (err, data) =>{
-        //     if(data.length == 0){
-        //         console.log("không tìm thấy mã hash");
-        //         res.send({
-        //             status: false,
-        //             message: 'Ảnh của bạn không phải là ảnh nguyên gốc'
-        //         })
-        //         return
-        //     } else{
-        //         console.log("mã hash có id là: " + data[0]._id);
-        //         console.log("mã hash la của user co id la: " + data[0].idUser);
-        //         userModel.find({_id: data[0].idUser}, (err, dataUser) =>{
-        //             if(dataUser.length == 0){
-        //                 console.log("Khong tim thay user");
-        //                 return
-        //             } else {
-        //                 console.log("user co email la: " + dataUser[0].email)
-        //                 res.send({
-        //                     status: true,
-        //                     message: 'Ảnh của bạn là ảnh nguyên gốc',
-        //                     infoPhotographer: {
-        //                         email: dataUser[0].email,
-        //                         fullname: dataUser[0].fullname
-        //                     }
-        //                 })
-        //             }
-        //         })
-        //     }
-        // })
+        console.log("mã hash check: " + hashImage)
+        imageContract.methods.getImage().call()
+            .then(function(result){
+                const arrayImage = result.map(a =>{
+                    return Object.assign({}, a)
+                })
+                console.log(arrayImage);
+                for (let index = 0; index < arrayImage.length; index++) {
+                    const element = arrayImage[index];
+                    if(element._hashImage === hashImage){
+                        console.log(element._idUser)
+                        userModel.find({_id: element._idUser}, (err, dataUser) => {
+                            if(dataUser.length === 0){
+                                console.log("Không tìm thấy user");
+                                return
+                            } else {
+                                console.log(dataUser[0]);
+                                imageModel.find({hashImage: hashImage}, (err, dataImage) =>{
+                                    if (dataImage.length === 0) {
+                                        console.log("Khong tim thay image");
+                                        return
+                                    } else {
+                                        console.log(dataImage[0]);
+                                        console.log("anh co txHash là: " + dataImage[0].transactionHash);
+                                        res.send({
+                                            status: true,
+                                            message: "Ảnh của bạn là ảnh nguyên gốc",
+                                            infoPhotographer:{
+                                                email: dataUser[0].email,
+                                                fullname: dataUser[0].fullname,
+                                                transactionHash: dataImage[0].transactionHash 
+                                            }
+                                        })
+                                    }
+                                })
+                            }
+                        })
+                        return
+                    } else {
+                        if (index === arrayImage.length - 1 && element._hashImage !== hashImage) {
+                            res.send({
+                                status: false,
+                                message: "Ảnh của bạn không phải là ảnh nguyên gốc",
+                                infoPhotographer:{
+                                    email: "",
+                                    fullname: "",
+                                    transactionHash: "" 
+                                }
+                            })   
+                        }
+                    }
+                }
+            });
         // // Xóa file ảnh sau khi mã hóa md5
         fs.unlinkSync(newFullPath);
         console.log("đã xóa ảnh trong folder ImageCheck")
       })
-    // res.send({
-    //     status: true,
-    //     message: 'file uploaded',
-    //     fileNameInServer: newFullPath
-    // })
 })
 
 ImageRouter.post('/finduserandfindimage', (req, res) => {
