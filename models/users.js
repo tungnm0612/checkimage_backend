@@ -19,7 +19,8 @@ const UserSchema = new Schema({
     fullname: {
         type: String,
         required: true
-    }
+    },
+    disabled: false
 });
 
 module.exports = mongoose.model('User', UserSchema);

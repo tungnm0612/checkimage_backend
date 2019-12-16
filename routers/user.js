@@ -12,7 +12,7 @@ UserRouter.post('/adduser', (req , res) =>{
     
     const hashPassword = bcrypt.hashSync(password, 12);
 
-    userModel.create({username, email, password: hashPassword, fullname})
+    userModel.create({username, email, password: hashPassword, fullname, disabled: false})
         .then(userCreated =>{
             // console.log(userCreated);
             res.status(201).json({
@@ -63,7 +63,50 @@ UserRouter.get('/getoneuser/:id', (req, res) =>{
         });
 });
 //update
-UserRouter.put('/updatepassword')
+UserRouter.put('/updatepassword', (req, res) =>{
+    const {idUser, newpassword} = req.body;
+    const hashPassword = bcrypt.hashSync(newpassword, 12);
+    userModel.findByIdAndUpdate(idUser, {password: hashPassword})
+        .then(passwordUpdate => {
+            res.send({
+                success: true,
+                message: "Đã đổi mật khẩu thành công!",
+            })
+        }).catch(err => {
+            console.log(err)
+        })
+})
+
+// UserRouter.put('/updatepassword')
+
+UserRouter.put('/active', (req, res) =>{
+    const {idUser, active} = req.body;
+    if (active === false) {
+        userModel.findByIdAndUpdate(idUser, {disabled: true})
+            .then(dataUser => {
+                // console.log(dataUser)
+                res.send({
+                    success: true,
+                    message: "Đã tắt hoạt động của tài khoản " + dataUser.username + " !"
+                })
+            }).catch(err =>{
+                console.log(err);
+            })
+    } else {
+        if (active === true) {
+            userModel.findByIdAndUpdate(idUser, {disabled: false})
+            .then(dataUser => {
+                console.log(dataUser.disabled)
+                res.send({
+                    success: true,
+                    message: "Đã bật hoạt động của tài khoản " + dataUser.username + " !"
+                })
+            }).catch(err =>{
+                console.log(err);
+            })
+        }
+    }
+})
 //delete
 
 

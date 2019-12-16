@@ -29,31 +29,64 @@ AuthRouter.post('/login', (req, res) =>{
                 message: 'Không tồn tại người dùng!'
             })
             } else{
-                if(bcrypt.compareSync(password,userFound.password)){
-                    // login with session
-                    // req.session.user = {
-                    //     username,
-                    //     id: userFound._id,
-                    // };
-
-                    //login with jwt
-                    const access_token = jwt.sign({ username, id: userFound._id }, jwtSecret);
-
-                    res.json({
-                        success: 1,
-                        message: 'Đăng nhập thành công!',
-                        access_token,
-                        user:{
-                            username,
-                            id: userFound._id
-                        }
-                    })
-                } else{
+                if(userFound.disabled === true){
                     res.json({
                         success: 0,
-                        message: 'Sai mật khẩu!'
+                        message: 'Tài khoản của bạn đã bị khóa. Xin vui lòng liên hệ với quản trị viên để tìm hiểu nguyên nhân.'
                     })
                 }
+                else{
+                    if(bcrypt.compareSync(password,userFound.password)){
+                        // login with session
+                        // req.session.user = {
+                        //     username,
+                        //     id: userFound._id,
+                        // };
+    
+                        //login with jwt
+                        const access_token = jwt.sign({ username, id: userFound._id }, jwtSecret);
+    
+                        res.json({
+                            success: 1,
+                            message: 'Đăng nhập thành công!',
+                            access_token,
+                            user:{
+                                username,
+                                id: userFound._id
+                            }
+                        })
+                    } else{
+                        res.json({
+                            success: 0,
+                            message: 'Sai mật khẩu!'
+                        })
+                    }
+                }
+                // if(bcrypt.compareSync(password,userFound.password)){
+                //     // login with session
+                //     // req.session.user = {
+                //     //     username,
+                //     //     id: userFound._id,
+                //     // };
+
+                //     //login with jwt
+                //     const access_token = jwt.sign({ username, id: userFound._id }, jwtSecret);
+
+                //     res.json({
+                //         success: 1,
+                //         message: 'Đăng nhập thành công!',
+                //         access_token,
+                //         user:{
+                //             username,
+                //             id: userFound._id
+                //         }
+                //     })
+                // } else{
+                //     res.json({
+                //         success: 0,
+                //         message: 'Sai mật khẩu!'
+                //     })
+                // }
             }
     }).catch(err => {
         res.json({
@@ -80,11 +113,26 @@ AuthRouter.get('/check', (req, res) =>{
     console.log(decode);
     try{
         if(decode && decode.id){
-            res.send({
-                success: 1,
-                message: 'Người dùng đã đăng nhập',
-                user: decode
-            });
+            userModel.find({_id: decode.id})
+                .then(userfindDisabled =>{
+                    if(userfindDisabled[0].disabled === false){
+                        res.send({
+                            success: 1,
+                            message: 'Người dùng đã đăng nhập',
+                            user: decode
+                        });
+                    } else {
+                        res.send({
+                            success: 0,
+                            message: 'Tài khoản người dùng đã bị khóa'
+                        });
+                    }
+            })
+            // res.send({
+            //     success: 1,
+            //     message: 'Người dùng đã đăng nhập',
+            //     user: decode
+            // });
         } else{
             res.send({
                 success: 0,

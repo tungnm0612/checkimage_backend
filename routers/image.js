@@ -118,11 +118,11 @@ ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) =>
                             res.send({
                                 status: false,
                                 message: "Ảnh của bạn không phải là ảnh nguyên gốc",
-                                infoPhotographer:{
-                                    email: "",
-                                    fullname: "",
-                                    transactionHash: "" 
-                                }
+                                // infoPhotographer:{
+                                //     email: "",
+                                //     fullname: "",
+                                //     transactionHash: "" 
+                                // }
                             })   
                         }
                     }
@@ -134,67 +134,88 @@ ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) =>
       })
 })
 
-ImageRouter.post('/finduserandfindimage', (req, res) => {
-    const findIDPhotographer = req.body.findIDPhotographer
-    const findHashImage = req.body.findHashImage
-    console.log( "=====" + findIDPhotographer);
-    console.log(findHashImage)
-    userModel.find({_id: findIDPhotographer}, (err, dataUser) =>{
-        if(dataUser.length == 0){
-            console.log("Khong tim thay user");
-            return
-        } else {
-            imageModel.find({hashImage: findHashImage}, (err, dataImage) =>{
-                if (dataImage.length == 0) {
-                    console.log("Khong tim thay image");
-                    return
-                } else {
-                    console.log("anh co txHash là: " + dataImage[0].transactionHash);
-                    res.send({
-                        status: true,
-                        infoPhotographer:{
-                            email: dataUser[0].email,
-                            fullname: dataUser[0].fullname,
-                            transactionHash: dataImage[0].transactionHash 
-                        }
-                    })
-                }
-            })
-            // console.log("user co email la: " + dataUser[0].email)
+ImageRouter.post('/personal', (req, res) =>{
+    const idUser = req.body.idUser;
+    // console.log( "aaaaaaaaa" + idUser)
+    imageModel.find({idUser: idUser}, (err, dataImage) => {
+        if(dataImage.length === 0){
             // res.send({
             //     status: true,
-            //     // message: 'Ảnh của bạn là ảnh nguyên gốc',
-            //     infoPhotographer: {
-            //         email: dataUser[0].email,
-            //         fullname: dataUser[0].fullname
-            //     }
+            //     message: "Bạn chưa đăng bức ảnh nào",
             // })
-        }
-
-    })
-
-})
-
-ImageRouter.post('/addinfoimage', (req, res) =>{
-    const idUser = req.body.idUser
-    const hashImage = req.body.hashImage
-    const transactionHash =  req.body.transactionHash
-    imageModel.create({ idUser,hashImage, transactionHash})
-        .then(imageCreated =>{
-                res.status(201).json({
-                    success: true,
-                    message: "Đã lưu thông tin ảnh vào DB!",
-                    data: imageCreated,
-                })
-        }).catch(err =>{
-            console.log(err);
-            res.status(500).json({
-                success:false,
-                message: "Lưu thông tin ảnh không thành công!",
-                err,
+            return
+        } else {
+            // console.log(dataImage)
+            res.send({
+                status: true,
+                message: "Danh sách những bức ảnh bạn đã đăng",
+                listImage: dataImage
             })
-        })
+        }
+    })
 })
+
+// ImageRouter.post('/finduserandfindimage', (req, res) => {
+//     const findIDPhotographer = req.body.findIDPhotographer
+//     const findHashImage = req.body.findHashImage
+//     console.log( "=====" + findIDPhotographer);
+//     console.log(findHashImage)
+//     userModel.find({_id: findIDPhotographer}, (err, dataUser) =>{
+//         if(dataUser.length == 0){
+//             console.log("Khong tim thay user");
+//             return
+//         } else {
+//             imageModel.find({hashImage: findHashImage}, (err, dataImage) =>{
+//                 if (dataImage.length == 0) {
+//                     console.log("Khong tim thay image");
+//                     return
+//                 } else {
+//                     console.log("anh co txHash là: " + dataImage[0].transactionHash);
+//                     res.send({
+//                         status: true,
+//                         infoPhotographer:{
+//                             email: dataUser[0].email,
+//                             fullname: dataUser[0].fullname,
+//                             transactionHash: dataImage[0].transactionHash 
+//                         }
+//                     })
+//                 }
+//             })
+//             // console.log("user co email la: " + dataUser[0].email)
+//             // res.send({
+//             //     status: true,
+//             //     // message: 'Ảnh của bạn là ảnh nguyên gốc',
+//             //     infoPhotographer: {
+//             //         email: dataUser[0].email,
+//             //         fullname: dataUser[0].fullname
+//             //     }
+//             // })
+//         }
+
+//     })
+
+// })
+
+// ImageRouter.post('/addinfoimage', (req, res) =>{
+//     const idUser = req.body.idUser
+//     const hashImage = req.body.hashImage
+//     const transactionHash =  req.body.transactionHash
+//     imageModel.create({ idUser,hashImage, transactionHash})
+//         .then(imageCreated =>{
+//                 res.status(201).json({
+//                     success: true,
+//                     message: "Đã lưu thông tin ảnh vào DB!",
+//                     data: imageCreated,
+//                 })
+//         }).catch(err =>{
+//             console.log(err);
+//             res.status(500).json({
+//                 success:false,
+//                 message: "Lưu thông tin ảnh không thành công!",
+//                 err,
+//             })
+//         })
+// })
 
 
 module.exports = ImageRouter;
