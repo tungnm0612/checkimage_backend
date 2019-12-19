@@ -8,27 +8,80 @@ const bcrypt = require('bcrypt');
 //CRUD
 //Create
 UserRouter.post('/adduser', (req , res) =>{
-    const { username, email, password, fullname} = req.body;
-    
-    const hashPassword = bcrypt.hashSync(password, 12);
-
-    userModel.create({username, email, password: hashPassword, fullname, disabled: false})
-        .then(userCreated =>{
-            // console.log(userCreated);
-            res.status(201).json({
-                success: true,
-                message: "Tạo tài khoản thành công!",
-                data: userCreated,
+    const { username, email, password, fullname, phone} = req.body;
+    userModel.find({username: username}, (err, dataUsername) => {
+        if (dataUsername.length === 0) {
+            userModel.find({email: email}, (err, dataEmail) =>{
+                if (dataEmail.length === 0) {
+                    const hashPassword = bcrypt.hashSync(password, 12);
+                    userModel.create({username, email, password: hashPassword, fullname, phone, disabled: false})
+                        .then(userCreated =>{
+                            // console.log(userCreated);
+                            res.status(201).json({
+                                success: true,
+                                message: "Tạo tài khoản thành công!",
+                                data: userCreated,
+                            })
+                        }).catch(error =>{
+                            console.log(error);
+                            res.status(500).json({
+                                success: false,
+                                message: "Tạo tài khoản không thành công!",
+                                error,
+                            })
+                    })
+                } else {
+                    res.send({
+                        success: false,
+                        message: "Email đã tồn tại, xin vui lòng chọn email khác!"
+                    })
+                }
             })
-        }).catch(error =>{
-            console.log(error);
-            res.status(500).json({
+        } else {
+            res.send({
                 success: false,
-                message: "Tạo tài khoản không thành công!",
-                error,
+                message: "Tài khoản đã tồn tại, xin vui lòng chọn tài khoản khác!"
             })
+        }
     })
+    
+    // const hashPassword = bcrypt.hashSync(password, 12);
+    // userModel.create({username, email, password: hashPassword, fullname, disabled: false})
+    //     .then(userCreated =>{
+    //         // console.log(userCreated);
+    //         res.status(201).json({
+    //             success: true,
+    //             message: "Tạo tài khoản thành công!",
+    //             data: userCreated,
+    //         })
+    //     }).catch(error =>{
+    //         console.log(error);
+    //         res.status(500).json({
+    //             success: false,
+    //             message: "Tạo tài khoản không thành công!",
+    //             error,
+    //         })
+    // })
 });
+
+//Get Info Personal
+UserRouter.post('/infopersonal', (req, res) =>{
+    const idUser = req.body.idUser
+    // console.log(idUser)
+    userModel.find({_id: idUser}, (err, dataUser) => {
+        if (dataUser.length === 0) {
+            return
+        } else {
+            // console.log(dataUser[0])
+            res.send({
+                status: true,
+                message: "Thông tin tài khoản của bạn",
+                infoPersonal: dataUser[0]
+            })
+        }
+    })
+})
+
 
 //get list
 UserRouter.get('/getalluser', (req, res) => {
@@ -49,6 +102,7 @@ UserRouter.get('/getalluser', (req, res) => {
 
 //get one
 UserRouter.get('/getoneuser/:id', (req, res) =>{
+    console.log(req.params.id)
     userModel.findById(req.params.id)
         .then(oneUser =>{
             res.json({
@@ -61,7 +115,8 @@ UserRouter.get('/getoneuser/:id', (req, res) =>{
                 err
             });
         });
-});
+}); 
+
 //update
 UserRouter.put('/updatepassword', (req, res) =>{
     const {idUser, newpassword} = req.body;
@@ -77,7 +132,6 @@ UserRouter.put('/updatepassword', (req, res) =>{
         })
 })
 
-// UserRouter.put('/updatepassword')
 
 UserRouter.put('/active', (req, res) =>{
     const {idUser, active} = req.body;
@@ -107,6 +161,117 @@ UserRouter.put('/active', (req, res) =>{
         }
     }
 })
+
+UserRouter.put('/changeinfo', (req, res) =>{
+    const {idUser, username, fullname, email, phone} = req.body;
+    // console.log(req.body);
+    userModel.find({username:username}, (err, dataUsername) =>{
+        if (dataUsername.length === 1) {
+            // console.log(dataUsername[0]._id)
+            // console.log(idUser)
+            if (dataUsername[0]._id == idUser) {
+                userModel.find({email: email}, (err, dataEmail) => {
+                    if (dataEmail.length === 1) {
+                        if (dataEmail[0]._id == idUser) {
+                            userModel.findByIdAndUpdate(idUser, {username: username, fullname: fullname, email: email, phone: phone})
+                                .then(() =>{
+                                    res.send({
+                                        success: true,
+                                        message: "Thay đổi thông tin thành công!"
+                                    })
+                                }).catch(err => {
+                                    console.log(err)
+                                    res.send({
+                                        success: false,
+                                        message: "Thay đổi thông tin không thành công!"
+                                })
+                            })
+                        } else {
+                            res.send({
+                                success: false,
+                                message: "Email của bạn đã tồn tại, xin vui lòng sử dụng email khác!"
+                            })
+                        }
+                    } else if (dataEmail.length === 0) {
+                        userModel.findByIdAndUpdate(idUser, {username: username, fullname: fullname, email: email, phone: phone})
+                            .then(() =>{
+                                res.send({
+                                    success: true,
+                                    message: "Thay đổi thông tin thành công!"
+                                })
+                            }).catch(err => {
+                                console.log(err)
+                                res.send({
+                                    success: false,
+                                    message: "Thay đổi thông tin không thành công!"
+                            })
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: "Email của bạn đã tồn tại, xin vui lòng sử dụng email khác!"
+                        })
+                    }
+                })
+            } else {
+                res.send({
+                    success: false,
+                    message: "Tài khoản của bạn đã tồn tại, xin vui lòng sử dụng tài khoản khác!"
+                })
+            }
+        } else if(dataUsername.length === 0){
+            userModel.find({email: email}, (err, dataEmail) =>{
+                if (dataEmail.length === 1) {
+                    if (dataEmail[0]._id == idUser) {
+                        userModel.findByIdAndUpdate(idUser, {username: username, fullname: fullname, email: email, phone: phone})
+                            .then(() =>{
+                                res.send({
+                                    success: true,
+                                    message: "Thay đổi thông tin thành công!"
+                                })
+                            }).catch(err => {
+                                console.log(err)
+                                res.send({
+                                    success: false,
+                                    message: "Thay đổi thông tin không thành công!"
+                            })
+                        })
+                    } else {
+                        res.send({
+                            success: false,
+                            message: "Email của bạn đã tồn tại, xin vui lòng sử dụng email khác!"
+                        })
+                    }
+                } else if (dataEmail.length === 0) {
+                    userModel.findByIdAndUpdate(idUser, {username: username, fullname: fullname, email: email, phone: phone})
+                        .then(() =>{
+                            res.send({
+                                success: true,
+                                message: "Thay đổi thông tin thành công!"
+                            })
+                        }).catch(err => {
+                            console.log(err)
+                            res.send({
+                                success: false,
+                                message: "Thay đổi thông tin không thành công!"
+                        })
+                    })
+                } else {
+                    res.send({
+                        success: false,
+                        message: "Email của bạn đã tồn tại, xin vui lòng sử dụng email khác!"
+                    })
+                }
+            })
+        } else {
+            res.send({
+                success: false,
+                message: "Tài khoản của bạn đã tồn tại, xin vui lòng sử dụng tài khoản khác!"
+            })
+        }
+    })
+})
+
 //delete
 
 

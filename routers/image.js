@@ -53,14 +53,14 @@ ImageRouter.post('/uploadimage', imageUploader.single('uploadimage'), (req, res)
                 fs.unlinkSync(newFullPath);
                 console.log("đã xóa ảnh trong folder ImageUpload")
                 res.send({
-                    status: false,
+                    success: false,
                     message: "Ảnh của bạn đã có trên Blockchain"
                 })
             }
         })
       })
 })
-
+ 
 // Check Image
 const imageChecker = multer({ dest: 'ImageCheck/' })
 
@@ -76,6 +76,7 @@ ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) =>
     md5File(newFullPath, (err, hashImage) => {
         if (err) throw err
         console.log("mã hash check: " + hashImage)
+        // const accounts = web3.eth.getAccounts();
         imageContract.methods.getImage().call()
             .then(function(result){
                 const arrayImage = result.map(a =>{
@@ -105,12 +106,13 @@ ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) =>
                                             infoPhotographer:{
                                                 email: dataUser[0].email,
                                                 fullname: dataUser[0].fullname,
-                                                transactionHash: dataImage[0].transactionHash 
+                                                transactionHash: dataImage[0].transactionHash,
+                                                phone: dataUser[0].phone 
                                             }
                                         })
                                     }
                                 })
-                            }
+                            } 
                         })
                         return
                     } else {
@@ -137,21 +139,35 @@ ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) =>
 ImageRouter.post('/personal', (req, res) =>{
     const idUser = req.body.idUser;
     // console.log( "aaaaaaaaa" + idUser)
-    imageModel.find({idUser: idUser}, (err, dataImage) => {
-        if(dataImage.length === 0){
-            // res.send({
-            //     status: true,
-            //     message: "Bạn chưa đăng bức ảnh nào",
-            // })
-            return
-        } else {
-            // console.log(dataImage)
-            res.send({
-                status: true,
-                message: "Danh sách những bức ảnh bạn đã đăng",
-                listImage: dataImage
+    userModel.find({_id: idUser}, (err, dataUser) => {
+        // console.log("111" + dataUser)
+    //     if (dataUser.length === 0) {
+    //         return
+    //     } else {
+            imageModel.find({idUser: idUser}, (err, dataImage) => {
+                // console.log("22222" + dataImage)
+                if(dataImage.length === 0){
+                    res.send({
+                        status: true,
+                        message: "Bạn chưa đăng bức ảnh nào",
+                        data: {
+                            dataUser: dataUser
+                        }
+                    })
+    //                 // return
+                } else {
+                    // console.log(dataImage)
+                    res.send({
+                        status: true,
+                        message: "Danh sách những bức ảnh bạn đã đăng",
+                        data: {
+                            dataUser: dataUser,
+                            dataImage: dataImage
+                        }
+                    })
+                }
             })
-        }
+    //     }
     })
 })
 

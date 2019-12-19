@@ -64,7 +64,7 @@ mongoose.connect('mongodb://admin:admin1@ds241258.mlab.com:41258/checkimage', (e
     if(err) console.log(err)
     else console.log("DB connect success!")
 });
-
+mongoose.set('useFindAndModify', false);
 app.use('/api', apiRouter);
 
 
