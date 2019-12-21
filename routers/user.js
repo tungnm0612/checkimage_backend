@@ -33,7 +33,7 @@ UserRouter.post('/adduser', (req , res) =>{
                 } else {
                     res.send({
                         success: false,
-                        message: "Email đã tồn tại, xin vui lòng chọn email khác!"
+                        message: "Địa chỉ email đã được sử dụng!"
                     })
                 }
             })

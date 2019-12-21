@@ -29,25 +29,45 @@ ImageRouter.post('/uploadimage', imageUploader.single('uploadimage'), (req, res)
         imageModel.find({hashImage: hashImage}, async (err, dataImage) =>{
             if (dataImage.length === 0){
                 const accounts = await web3.eth.getAccounts();
-                await imageContract.methods.addImage(idUser, hashImage).send({from:accounts[0], gas: 150000}) 
-                    .on('transactionHash', function(transactionHash){
-                        console.log(transactionHash);
-                        imageModel.create({idUser, hashImage, transactionHash})
-                            .then(imageCreated =>{
-                                res.status(201).json({
-                                    success: true,
-                                    message: "Đã tải ảnh lên thành công!",
-                                    data: imageCreated,
-                                })
-                            }).catch(err =>{
-                                console.log(err);
-                                res.status(500).json({
-                                    success:false,
-                                    message: "Tải ảnh lên không thành công",
-                                    err,
-                                })
+                await imageContract.methods.addImage(idUser, hashImage).send({from:accounts[0], gas: "1000000"}, function(error, transactionHash){
+                    if (error) throw error
+                    console.log(transactionHash);
+                    imageModel.create({idUser, hashImage, transactionHash})
+                        .then(imageCreated =>{
+                            res.status(201).json({
+                                success: true,
+                                message: "Đã tải ảnh lên thành công!",
+                                data: imageCreated,
+                            })
+                        }).catch(err =>{
+                            console.log(err);
+                            res.status(500).json({
+                                success:false,
+                                message: "Tải ảnh lên không thành công",
+                                err,
                             })
                         })
+                }) 
+                    // .on('transactionHash', function(transactionHash){
+                        // console.log(transactionHash);
+                        // imageModel.create({idUser, hashImage, transactionHash})
+                        //     .then(imageCreated =>{
+                        //         res.status(201).json({
+                        //             success: true,
+                        //             message: "Đã tải ảnh lên thành công!",
+                        //             data: imageCreated,
+                        //         })
+                        //     }).catch(err =>{
+                        //         console.log(err);
+                        //         res.status(500).json({
+                        //             success:false,
+                        //             message: "Tải ảnh lên không thành công",
+                        //             err,
+                        //         })
+                        //     })
+                        // }).catch(err => {
+                        //     console.log(err)
+                        // })
             } else {
                 // Xóa file ảnh sau khi mã hóa md5
                 fs.unlinkSync(newFullPath);
