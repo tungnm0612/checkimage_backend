@@ -56,7 +56,7 @@ app.use(
     // }
 });
 
-app.use(cors({ origin: ['http://localhost:3000'], credentials: true }));
+app.use(cors({ origin: ['http://localhost:3000', 'https://originalphotos.herokuapp.com'], credentials: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 // mongodb://<dbuser>:<dbpassword>@ds241258.mlab.com:41258/checkimage
