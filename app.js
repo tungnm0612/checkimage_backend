@@ -20,60 +20,13 @@ const app = express();
 
 
 
-app.use(
-    // Middleware
-    (req, res, next) =>{
-    // console.log(req.session);
-    // console.log(req.sessionID);
-    return next();
-    // const jwtSecret = "qweqweqweqwe"
-    // const access_token = req.query.access_token;
-
-    // if(!req.query.access_token){
-    //     res.send({
-    //         success: 0,
-    //         message: "thieu token",
-    //     })
-    // }
-    
-    // try{
-    //     const decode = jwt.verify(access_token, jwtSecret);
-    //     if(decode && decode.id){
-    //         req.use = decode;
-    //         next();
-    //     } else{
-    //         res.send({
-    //             success: 0,
-    //             message: 'Nguoi dung chua dang nhap'
-    //         });
-    //     };
-    // } catch(error){
-    //     console.log(error);
-    //     res.send({
-    //         success: 0,
-    //         message: 'Token khong dung'
-    //     });
-    // }
-});
-
-app.use(function (req, res, next) { 
-    res.setHeader('Access-Control-Allow-Origin', '*'); 
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE'); 
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization'); 
-    res.setHeader('Access-Control-Allow-Credentials', true); 
-    if ('OPTIONS' === req.method) { 
-        res.send(204); 
-    } else { 
-        next(); 
-    } 
-}); 
 // app.use(function(req, res, next) {
-//     res.header("Access-Control-Allow-Origin", "https://originalphotos.herokuapp.com"); // update to match the domain you will make the request from
+//     res.header("Access-Control-Allow-Origin", "*");
 //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 //     next();
-//   });
+// });
 
-// app.use(cors({ origin: ['http://localhost:3000', 'https://originalphotos.herokuapp.com'], credentials: true }));
+app.use(cors({ origin: ['http://localhost:3000', 'https://originalphotos.herokuapp.com'], credentials: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 // mongodb://<dbuser>:<dbpassword>@ds241258.mlab.com:41258/checkimage
