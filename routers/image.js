@@ -122,7 +122,7 @@ ImageRouter.post('/uploadimage', imageUploader.single('uploadimage'), (req, res)
                             await imageContract.methods.addImage(idUser, hashImage).send({from:accounts[0], gas: "1000000"}, function(error, transactionHash){
                                 if (error) throw error
                                 console.log("Mã giao dịch là: " + transactionHash);
-                                imageModel.create({idUser, hashImage, transactionHash})
+                                imageModel.create({idUser, nameImage: orgName, hashImage, transactionHash})
                                     .then(imageCreated =>{
                                         console.log("Đã lưu giao dịch vào DB")
                                         res.status(201).json({
@@ -160,7 +160,7 @@ ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) =>
     // Đổi tên của file vừa upload lên, vì multer đang đặt default ko có đuôi file
     const newFullPath = `${fullPathInServ}-${orgName}`;
     fs.renameSync(fullPathInServ, newFullPath);
-
+    console.log(orgName)
     md5File(newFullPath, (err, hashImage) => {
         if (err) throw err
         console.log("mã hash check: " + hashImage)
@@ -225,6 +225,7 @@ ImageRouter.post('/checkimage', imageChecker.single('checkimage'), (req, res) =>
         console.log("đã xóa ảnh trong folder ImageCheck")
       })
 })
+
 
 ImageRouter.post('/personal', (req, res) =>{
     const idUser = req.body.idUser;
