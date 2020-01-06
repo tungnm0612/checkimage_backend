@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 //Create
 UserRouter.post('/adduser', (req , res) =>{
     const { username, email, password, fullname, phone} = req.body;
+    console.log(req.body);
     userModel.find({username: username}, (err, dataUsername) => {
         if (dataUsername.length === 0) {
             userModel.find({email: email}, (err, dataEmail) =>{
